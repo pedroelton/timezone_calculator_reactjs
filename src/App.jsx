@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const cities = [
   { label: "Tokyo, Japan", timeZone: "Asia/Tokyo" },
@@ -21,7 +21,7 @@ const cities = [
   { label: "Los Angeles, USA", timeZone: "America/Los_Angeles" },
 ];
 
-// Helper function to get the current local hour, always :00 (e.g. "10:00")
+// Returns the current local time as "HH:00"
 function getCurrentHourAsTimeString() {
   const now = new Date();
   const hours = now.getHours().toString().padStart(2, "0");
@@ -29,46 +29,67 @@ function getCurrentHourAsTimeString() {
 }
 
 function App() {
-  // Default the time input to the current local hour
   const [localTimeInput, setLocalTimeInput] = useState(
     getCurrentHourAsTimeString()
   );
 
-  // Convert HH:MM string to a Date object for *today* in local time.
-  const getLocalDateFromInput = () => {
+  useEffect(() => {
+    function scheduleHourlyUpdate() {
+      const now = new Date();
+
+      // Determine the next top-of-the-hour
+      const nextHour = new Date(now);
+      nextHour.setMinutes(0, 0, 0);
+      // If we're exactly on the hour, move to the next
+      if (now.getMinutes() === 0 && now.getSeconds() === 0) {
+        nextHour.setHours(now.getHours() + 1);
+      } else {
+        nextHour.setHours(now.getHours() + 1);
+      }
+
+      const msUntilNextHour = nextHour - now;
+
+      const timeoutId = setTimeout(() => {
+        setLocalTimeInput(getCurrentHourAsTimeString());
+        scheduleHourlyUpdate();
+      }, msUntilNextHour);
+
+      return () => clearTimeout(timeoutId);
+    }
+
+    const cleanup = scheduleHourlyUpdate();
+    return () => {
+      if (cleanup) cleanup();
+    };
+  }, []);
+
+  function getLocalDateFromInput() {
     if (!localTimeInput) return null;
     const [hours, minutes] = localTimeInput.split(":").map(Number);
     if (Number.isNaN(hours) || Number.isNaN(minutes)) return null;
-
     const now = new Date();
-    now.setHours(hours);
-    now.setMinutes(minutes);
-    now.setSeconds(0);
-    now.setMilliseconds(0);
+    now.setHours(hours, minutes, 0, 0);
     return now;
-  };
+  }
+
+  function formatTime(date, timeZone) {
+    if (!date) return "--:--";
+    return new Intl.DateTimeFormat("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+      timeZone,
+    }).format(date);
+  }
 
   const localDate = getLocalDateFromInput();
 
-  // Format a date for a given time zone in 24-hour format.
-  const formatTime = (date, timeZone) => {
-    if (!date) return "--:--";
-    const options = {
-      hour: "2-digit",
-      minute: "2-digit",
-      hourCycle: "h23", // forces 24-hour format
-      timeZone,
-    };
-    return new Intl.DateTimeFormat("en-GB", options).format(date);
-  };
-
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center px-4 py-6">
+    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center px-4 py-6">
       <h1 className="text-2xl font-bold mb-6 text-center">
         Time Zone Converter
       </h1>
 
-      {/* Current Location Input */}
       <div className="mb-8 w-full max-w-sm mx-auto">
         <label className="block mb-2 font-semibold">
           Current Location Time (24h)
@@ -77,22 +98,21 @@ function App() {
           type="time"
           value={localTimeInput}
           onChange={(e) => setLocalTimeInput(e.target.value)}
-          className="w-full p-2 bg-zinc-800 rounded border border-zinc-700 focus:outline-none"
+          className="w-full p-2 bg-gray-800 rounded border border-gray-700 focus:outline-none"
         />
       </div>
 
-      {/* Table Wrapper for Horizontal Scrolling on Small Screens */}
       <div className="overflow-x-auto w-full max-w-lg mx-auto">
         <table className="table-auto w-full border-collapse">
           <thead>
-            <tr className="text-left border-b border-zinc-700">
+            <tr className="text-left border-b border-gray-700">
               <th className="py-2">City</th>
               <th className="py-2">Time</th>
             </tr>
           </thead>
           <tbody>
             {cities.map((city) => (
-              <tr key={city.label} className="border-b border-zinc-800">
+              <tr key={city.label} className="border-b border-gray-800">
                 <td className="py-2">{city.label}</td>
                 <td className="py-2 font-mono">
                   {formatTime(localDate, city.timeZone)}
