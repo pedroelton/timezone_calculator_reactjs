@@ -85,7 +85,7 @@ function App() {
   const localDate = getLocalDateFromInput();
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center px-4 py-6">
+    <div className="min-h-screen bg-black text-white flex flex-col items-center px-4 py-6">
       <h1 className="text-2xl font-bold mb-6 text-center">
         Time Zone Converter
       </h1>
@@ -98,21 +98,21 @@ function App() {
           type="time"
           value={localTimeInput}
           onChange={(e) => setLocalTimeInput(e.target.value)}
-          className="w-full p-2 bg-gray-800 rounded border border-gray-700 focus:outline-none"
+          className="w-full p-2 bg-zinc-800 rounded border border-zinc-700 focus:outline-none"
         />
       </div>
 
       <div className="overflow-x-auto w-full max-w-lg mx-auto">
         <table className="table-auto w-full border-collapse">
           <thead>
-            <tr className="text-left border-b border-gray-700">
+            <tr className="text-left border-b border-zinc-700">
               <th className="py-2">City</th>
               <th className="py-2">Time</th>
             </tr>
           </thead>
           <tbody>
             {cities.map((city) => (
-              <tr key={city.label} className="border-b border-gray-800">
+              <tr key={city.label} className="border-b border-zinc-800">
                 <td className="py-2">{city.label}</td>
                 <td className="py-2 font-mono">
                   {formatTime(localDate, city.timeZone)}
